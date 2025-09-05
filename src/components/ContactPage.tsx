@@ -236,19 +236,6 @@ export const ContactPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Additional Info */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Enterprise Customers
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Need dedicated support, custom integrations, or have specific compliance requirements? 
-                  Our enterprise team is ready to help.
-                </p>
-                <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                  Contact Enterprise Sales
-                </button>
-              </div>
             </div>
           </div>
         </div>
