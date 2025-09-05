@@ -14,12 +14,12 @@ export const isOpenAIConfigured = () => {
 }
 
 export interface ExecutiveBrief {
-  companyOverview: string
-  productsServices: string
-  businessModel: string
-  targetMarket: string
-  keyInsights: string
-  competitivePositioning: string
+  company_overview: string
+  products_services: string
+  business_model: string
+  target_market: string
+  key_insights: string
+  competitive_positioning: string
   generatedAt: string
 }
 
@@ -68,12 +68,12 @@ CRITICAL: Each section should contain ONLY paragraph text - no field names, no c
     const briefData = JSON.parse(briefContent)
     
     return {
-      companyOverview: briefData.companyOverview || 'No overview available',
-      productsServices: briefData.productsServices || 'No products/services information available',
-      businessModel: briefData.businessModel || 'No business model information available',
-      targetMarket: briefData.targetMarket || 'No target market information available',
-      keyInsights: briefData.keyInsights || 'No key insights available',
-      competitivePositioning: briefData.competitivePositioning || 'No competitive positioning information available',
+      company_overview: briefData.companyOverview || 'No overview available',
+      products_services: briefData.productsServices || 'No products/services information available',
+      business_model: briefData.businessModel || 'No business model information available',
+      target_market: briefData.targetMarket || 'No target market information available',
+      key_insights: briefData.keyInsights || 'No key insights available',
+      competitive_positioning: briefData.competitivePositioning || 'No competitive positioning information available',
       generatedAt: new Date().toISOString()
     }
   } catch (error) {
