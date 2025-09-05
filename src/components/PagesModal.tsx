@@ -17,6 +17,23 @@ export const PagesModal: React.FC<PagesModalProps> = ({
 }) => {
   const [expandedPages, setExpandedPages] = React.useState<Set<string>>(new Set())
 
+  // Handle Escape key press
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   const togglePageExpansion = (pageId: string) => {
