@@ -1,3 +1,4 @@
+// src/components/ProjectStatus.tsx
 import React from 'react'
 import { CheckCircle, Clock, AlertCircle, Loader, Globe, Trash2 } from 'lucide-react'
 import { Project } from '../lib/supabase'
@@ -6,7 +7,11 @@ import { PagesModal } from './PagesModal'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { ExecutiveBriefModal } from './ExecutiveBriefModal'
 import { useExecutiveBrief } from '../hooks/useExecutiveBrief'
-import { generateReport, downloadReportAsMarkdown, downloadReportAsPDF } from '../utils/reportGenerator'
+import { generateReport, downloadReportAsMarkdown } from '../utils/reportGenerator'
+
+// NEW: LLM + Supabase helpers
+import { generateExecutiveBrief as llmGenerate } from '../openai'
+import { saveExecutiveBrief } from '../lib/supabase'
 
 interface ProjectStatusProps {
   project: Project
@@ -15,16 +20,22 @@ interface ProjectStatusProps {
 
 export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete }) => {
   const { pages, loading: pagesLoading } = useProjectPages(project.id)
-  const { brief, loading: briefLoading } = useExecutiveBrief(project.id)
+  const { brief, loading: briefLoading, fetchBrief } = useExecutiveBrief(project.id)
+
   const [showPagesModal, setShowPagesModal] = React.useState(false)
   const [showBriefModal, setShowBriefModal] = React.useState(false)
   const [showDeleteModal, setShowDeleteModal] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [displayPageCount, setDisplayPageCount] = React.useState(0)
 
+  // NEW: local state for brief generation
+  const [isGeneratingBrief, setIsGeneratingBrief] = React.useState(false)
+
+  const projectName = project.name || new URL(project.seed_url).hostname
+
   // Debug logging
   React.useEffect(() => {
-    console.log(`ProjectStatus Debug - Project: ${project.name || project.seed_url}`)
+    console.log(`ProjectStatus Debug - Project: ${projectName}`)
     console.log(`  - Project ID: ${project.id}`)
     console.log(`  - Project Status: ${project.status}`)
     console.log(`  - Pages Count: ${pages.length}`)
@@ -34,22 +45,21 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
 
   // Update display page count when pages change
   React.useEffect(() => {
-    console.log(`Updating display page count for ${project.name || project.seed_url}: ${pages.length}`)
+    console.log(`Updating display page count for ${projectName}: ${pages.length}`)
     setDisplayPageCount(pages.length)
-  }, [pages.length, project.name, project.seed_url])
+  }, [pages.length, projectName])
 
   // Force re-render when project status changes to completed
   React.useEffect(() => {
     if (project.status === 'completed' && displayPageCount === 0 && !pagesLoading) {
-      console.log(`Project completed but no pages shown, forcing refresh for ${project.name || project.seed_url}`)
-      // Small delay to ensure database has been updated
+      console.log(`Project completed but no pages shown, forcing refresh for ${projectName}`)
       const timeoutId = setTimeout(() => {
         console.log('Triggering page count update after completion')
         setDisplayPageCount(pages.length)
       }, 1000)
       return () => clearTimeout(timeoutId)
     }
-  }, [project.status, displayPageCount, pagesLoading, pages.length, project.name, project.seed_url])
+  }, [project.status, displayPageCount, pagesLoading, pages.length, projectName])
 
   const getStatusIcon = () => {
     switch (project.status) {
@@ -90,31 +100,78 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
     }
   }
 
-  const handleViewPages = () => {
-    setShowPagesModal(true)
-  }
-
-  const handleViewBrief = () => {
-    setShowBriefModal(true)
-  }
+  const handleViewPages = () => setShowPagesModal(true)
 
   const handleDownloadReport = () => {
     const reportData = generateReport(project, pages, brief)
     downloadReportAsMarkdown(reportData)
   }
 
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true)
-  }
+  const handleDeleteClick = () => setShowDeleteModal(true)
 
   const handleDeleteConfirm = async () => {
     setIsDeleting(true)
     const success = await onDelete(project.id)
-    if (success) {
-      setShowDeleteModal(false)
-    }
+    if (success) setShowDeleteModal(false)
     setIsDeleting(false)
   }
+
+  // Build LLM input from scraped pages (markdown preferred)
+  const buildContentForBrief = React.useCallback(() => {
+    const text = pages
+      .map((p) => (p.content_md || '').trim())
+      .filter(Boolean)
+      .join('\n\n---\n\n')
+
+    // safety cap; openai.ts trims again
+    return text.slice(0, 40_000)
+  }, [pages])
+
+  // Main handler: generate (if needed) then show
+  const handleExecutiveBrief = async () => {
+    try {
+      if (brief) {
+        setShowBriefModal(true)
+        return
+      }
+
+      const content = buildContentForBrief()
+      if (!content) {
+        alert('No page content available yet to generate the executive brief.')
+        return
+      }
+
+      setIsGeneratingBrief(true)
+
+      // 1) Generate via LLM (returns snake_case fields + generated_at)
+      const generated = await llmGenerate(content, projectName)
+      if (!generated) {
+        alert('LLM did not return a valid brief. Please try again.')
+        return
+      }
+
+      // 2) Save to Supabase (upsert on project_id)
+      await saveExecutiveBrief(project.id, {
+        company_overview: generated.company_overview,
+        products_services: generated.products_services,
+        business_model: generated.business_model,
+        target_market: generated.target_market,
+        key_insights: generated.key_insights,
+        competitive_positioning: generated.competitive_positioning,
+        generated_at: generated.generated_at,
+      })
+
+      // 3) Refresh local brief + open modal
+      await fetchBrief()
+      setShowBriefModal(true)
+    } catch (e) {
+      console.error('Failed to generate Executive Brief:', e)
+      alert('Failed to generate the Executive Brief.')
+    } finally {
+      setIsGeneratingBrief(false)
+    }
+  }
+
   return (
     <>
       <div className={`rounded-xl border-2 p-6 transition-all duration-200 group hover:shadow-md ${getStatusColor()}`}>
@@ -123,7 +180,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
             {getStatusIcon()}
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {project.name || new URL(project.seed_url).hostname}
+                {projectName}
               </h3>
               <p className="text-sm text-gray-600">{project.seed_url}</p>
             </div>
@@ -178,21 +235,30 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
         {project.status === 'completed' && (
           <div className="mt-4 space-y-3">
             <div className="flex space-x-3">
-              <button 
-                onClick={handleViewPages}
+              <button
+                onClick={() => setShowPagesModal(true)}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               >
                 View Pages ({displayPageCount})
               </button>
-              {brief && (
-                <button 
-                  onClick={handleViewBrief}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  Executive Brief
-                </button>
-              )}
-              <button 
+
+              <button
+                onClick={handleExecutiveBrief}
+                disabled={isGeneratingBrief || briefLoading}
+                className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                  brief
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                } ${isGeneratingBrief || briefLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isGeneratingBrief
+                  ? 'Generating...'
+                  : brief
+                    ? 'Executive Brief'
+                    : 'Generate Executive Brief'}
+              </button>
+
+              <button
                 onClick={handleDownloadReport}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
               >
@@ -212,7 +278,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
         isOpen={showPagesModal}
         onClose={() => setShowPagesModal(false)}
         pages={pages}
-        projectName={project.name || new URL(project.seed_url).hostname}
+        projectName={projectName}
       />
 
       {brief && (
@@ -220,7 +286,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
           isOpen={showBriefModal}
           onClose={() => setShowBriefModal(false)}
           brief={brief}
-          projectName={project.name || new URL(project.seed_url).hostname}
+          projectName={projectName}
         />
       )}
 
@@ -228,7 +294,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
-        projectName={project.name || new URL(project.seed_url).hostname}
+        projectName={projectName}
         isDeleting={isDeleting}
       />
     </>
