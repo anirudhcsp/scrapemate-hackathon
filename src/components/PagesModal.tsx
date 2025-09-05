@@ -15,7 +15,21 @@ export const PagesModal: React.FC<PagesModalProps> = ({
   pages, 
   projectName 
 }) => {
+  const [expandedPages, setExpandedPages] = React.useState<Set<string>>(new Set())
+
   if (!isOpen) return null
+
+  const togglePageExpansion = (pageId: string) => {
+    setExpandedPages(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(pageId)) {
+        newSet.delete(pageId)
+      } else {
+        newSet.add(pageId)
+      }
+      return newSet
+    })
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -96,12 +110,15 @@ export const PagesModal: React.FC<PagesModalProps> = ({
                   {page.content_md && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Content Preview:</h4>
-                      <div className="text-sm text-gray-600 whitespace-pre-wrap font-mono">
-                        {truncateContent(page.content_md, 300)}
+                      <div className="text-sm text-gray-600 whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
+                        {expandedPages.has(page.id) ? page.content_md : truncateContent(page.content_md, 300)}
                       </div>
                       {page.content_md.length > 300 && (
-                        <button className="text-blue-600 text-sm mt-2 hover:text-blue-700 transition-colors">
-                          Show more...
+                        <button 
+                          onClick={() => togglePageExpansion(page.id)}
+                          className="text-blue-600 text-sm mt-2 hover:text-blue-700 transition-colors"
+                        >
+                          {expandedPages.has(page.id) ? 'Show less' : 'Show more...'}
                         </button>
                       )}
                     </div>
