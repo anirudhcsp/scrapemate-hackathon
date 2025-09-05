@@ -21,6 +21,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
   const [showDeleteModal, setShowDeleteModal] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'json' | 'csv'>('markdown')
+  const [displayPageCount, setDisplayPageCount] = React.useState(0)
 
   // Debug logging
   React.useEffect(() => {
@@ -31,6 +32,25 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
     console.log(`  - Pages Loading: ${pagesLoading}`)
     console.log(`  - Pages Data:`, pages)
   }, [pages.length, pagesLoading, project.id])
+
+  // Update display page count when pages change
+  React.useEffect(() => {
+    console.log(`Updating display page count for ${project.name || project.seed_url}: ${pages.length}`)
+    setDisplayPageCount(pages.length)
+  }, [pages.length, project.name, project.seed_url])
+
+  // Force re-render when project status changes to completed
+  React.useEffect(() => {
+    if (project.status === 'completed' && displayPageCount === 0 && !pagesLoading) {
+      console.log(`Project completed but no pages shown, forcing refresh for ${project.name || project.seed_url}`)
+      // Small delay to ensure database has been updated
+      const timeoutId = setTimeout(() => {
+        console.log('Triggering page count update after completion')
+        setDisplayPageCount(pages.length)
+      }, 1000)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [project.status, displayPageCount, pagesLoading, pages.length, project.name, project.seed_url])
 
   const getStatusIcon = () => {
     switch (project.status) {
@@ -138,7 +158,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <Globe className="h-4 w-4" />
               <span>
-                Scraped {pages.length} page{pages.length !== 1 ? 's' : ''}
+                Scraped {displayPageCount} page{displayPageCount !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -173,7 +193,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
                 onClick={handleViewPages}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
-                View Pages ({pages.length})
+                View Pages ({displayPageCount})
               </button>
               {brief && (
                 <button 

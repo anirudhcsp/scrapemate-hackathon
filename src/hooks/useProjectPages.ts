@@ -62,8 +62,20 @@ export const useProjectPages = (projectId: string) => {
     } else {
       console.log('No projectId in useEffect, clearing pages')
       setPages([])
+      setError(null)
     }
   }, [projectId])
+
+  // Additional effect to refetch pages when they might be ready
+  useEffect(() => {
+    if (projectId && pages.length === 0 && !loading && !error) {
+      console.log('Pages empty but no loading/error, attempting refetch for:', projectId)
+      const timeoutId = setTimeout(() => {
+        fetchPages()
+      }, 2000)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [projectId, pages.length, loading, error])
 
   return {
     pages,
