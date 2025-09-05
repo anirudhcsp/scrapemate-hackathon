@@ -34,6 +34,26 @@ export const ExecutiveBriefModal: React.FC<ExecutiveBriefModalProps> = ({
 
   if (!isOpen) return null
 
+  const cleanContent = (content: string): string => {
+    if (!content) return 'No information available for this section.'
+    
+    return content
+      // Remove surrounding quotes
+      .replace(/^["']|["']$/g, '')
+      // Convert escaped newlines to actual newlines
+      .replace(/\\n/g, '\n')
+      // Remove escaped quotes
+      .replace(/\\"/g, '"')
+      // Remove any remaining JSON-style formatting
+      .replace(/^\{|\}$/g, '')
+      // Remove field names like "overview:", "mainProducts:", etc.
+      .replace(/^[a-zA-Z_]+:\s*/gm, '')
+      // Clean up multiple newlines
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      // Trim whitespace
+      .trim()
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -120,7 +140,7 @@ export const ExecutiveBriefModal: React.FC<ExecutiveBriefModalProps> = ({
                   </h3>
                 </div>
                 <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {section.content ? section.content.replace(/^["']|["']$/g, '').replace(/\\n/g, '\n').replace(/\\"/g, '"') : 'No information available for this section.'}
+                  {section.content ? cleanContent(section.content) : 'No information available for this section.'}
                 </div>
               </div>
             ))}
