@@ -37,36 +37,8 @@ export const ExecutiveBriefModal: React.FC<ExecutiveBriefModalProps> = ({
   const parseAndCleanContent = (content: string): string => {
     if (!content) return 'No information available for this section.'
     
-    // First, try to parse as JSON if it looks like JSON
-    let parsedContent = content
-    if (content.trim().startsWith('{') || content.trim().startsWith('"')) {
-      try {
-        // If it's a JSON string, parse it
-        const parsed = JSON.parse(content)
-        if (typeof parsed === 'object') {
-          // Extract all values from the JSON object and join them
-          parsedContent = Object.values(parsed).join('\n\n')
-        } else if (typeof parsed === 'string') {
-          parsedContent = parsed
-        }
-      } catch (e) {
-        // If JSON parsing fails, clean the raw content
-        parsedContent = content
-          .replace(/^["']|["']$/g, '')
-          .replace(/\\n/g, '\n')
-          .replace(/\\"/g, '"')
-          .replace(/^\{|\}$/g, '')
-          .replace(/"[^"]*":\s*"/g, '')
-          .replace(/",\s*"/g, '\n\n')
-          .replace(/"/g, '')
-      }
-    }
-    
-    return parsedContent
-      .replace(/\\n/g, '\n')
-      .replace(/\\"/g, '"')
-      .replace(/\n\s*\n\s*\n/g, '\n\n')
-      .trim()
+    // Since the data is already clean plain text, just return it as-is
+    return content.trim()
   }
 
   const formatDate = (dateString: string) => {
