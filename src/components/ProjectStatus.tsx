@@ -191,14 +191,14 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
             <div className="flex space-x-3">
               <button 
                 onClick={handleViewPages}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               >
                 View Pages ({displayPageCount})
               </button>
               {brief && (
                 <button 
                   onClick={handleViewBrief}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
                   Executive Brief
                 </button>
