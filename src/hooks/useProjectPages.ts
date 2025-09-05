@@ -7,7 +7,10 @@ export const useProjectPages = (projectId: string) => {
   const [error, setError] = useState<string | null>(null)
 
   const fetchPages = async () => {
-    if (!projectId || !isSupabaseConfigured()) return
+    if (!projectId || !isSupabaseConfigured()) {
+      setPages([])
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -19,18 +22,26 @@ export const useProjectPages = (projectId: string) => {
         .eq('project_id', projectId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching pages:', error)
+        throw error
+      }
+      
+      console.log(`Fetched ${data?.length || 0} pages for project ${projectId}`)
       setPages(data || [])
     } catch (err) {
       console.error('Error fetching pages:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch pages')
+      setPages([]) // Reset pages on error
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchPages()
+    if (projectId) {
+      fetchPages()
+    }
   }, [projectId])
 
   return {

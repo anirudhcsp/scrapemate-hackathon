@@ -22,6 +22,11 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'json' | 'csv'>('markdown')
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log(`Project ${project.id} has ${pages.length} pages, loading: ${pagesLoading}`)
+  }, [pages.length, pagesLoading, project.id])
+
   const getStatusIcon = () => {
     switch (project.status) {
       case 'completed':
