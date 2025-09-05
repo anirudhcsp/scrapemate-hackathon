@@ -10,7 +10,7 @@ import { useExecutiveBrief } from '../hooks/useExecutiveBrief'
 import { generateReport, downloadReportAsMarkdown } from '../utils/reportGenerator'
 
 // NEW: LLM + Supabase helpers
-import { generateExecutiveBrief as llmGenerate } from '../openai'
+import { generateExecutiveBrief as llmGenerate } from '../lib/openai'
 import { saveExecutiveBrief } from '../lib/supabase'
 
 interface ProjectStatusProps {
