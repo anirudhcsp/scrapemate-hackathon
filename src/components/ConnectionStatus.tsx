@@ -95,67 +95,80 @@ export const ConnectionStatus: React.FC = () => {
     }
   }
 
+  // Only show status messages if there are errors or misconfigurations
+  const shouldShowSupabaseStatus = supabaseStatus === 'error' || supabaseStatus === 'misconfigured'
+  const shouldShowFirecrawlStatus = firecrawlStatus === 'misconfigured'
+
+  // If everything is working fine, don't show any status messages
+  if (!shouldShowSupabaseStatus && !shouldShowFirecrawlStatus) {
+    return null
+  }
+
   return (
     <div className="space-y-4">
       {/* Supabase Status */}
-      <div className={`rounded-lg border p-4 ${getSupabaseStatusColor()}`}>
-        <div className="flex items-center space-x-3">
-          {getSupabaseStatusIcon()}
-          <div>
-            <p className="font-medium">{getSupabaseStatusText()}</p>
-            {error && (
-              <p className="text-sm mt-1 opacity-90">{error}</p>
-            )}
+      {shouldShowSupabaseStatus && (
+        <div className={`rounded-lg border p-4 ${getSupabaseStatusColor()}`}>
+          <div className="flex items-center space-x-3">
+            {getSupabaseStatusIcon()}
+            <div>
+              <p className="font-medium">{getSupabaseStatusText()}</p>
+              {error && (
+                <p className="text-sm mt-1 opacity-90">{error}</p>
+              )}
+            </div>
           </div>
+          
+          {supabaseStatus === 'misconfigured' && (
+            <div className="mt-3 text-sm">
+              <>
+                <p className="font-medium mb-2">To fix this:</p>
+                <ol className="list-decimal list-inside space-y-1 opacity-90">
+                  <li>Check your <code className="bg-black bg-opacity-10 px-1 rounded">.env</code> file</li>
+                  <li>Ensure <code className="bg-black bg-opacity-10 px-1 rounded">VITE_SUPABASE_URL</code> is set</li>
+                  <li>Ensure <code className="bg-black bg-opacity-10 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> is set</li>
+                  <li>Restart the development server</li>
+                </ol>
+              </>
+            </div>
+          )}
         </div>
-        
-        {supabaseStatus === 'misconfigured' && (
-          <div className="mt-3 text-sm">
-            <>
-              <p className="font-medium mb-2">To fix this:</p>
-              <ol className="list-decimal list-inside space-y-1 opacity-90">
-                <li>Check your <code className="bg-black bg-opacity-10 px-1 rounded">.env</code> file</li>
-                <li>Ensure <code className="bg-black bg-opacity-10 px-1 rounded">VITE_SUPABASE_URL</code> is set</li>
-                <li>Ensure <code className="bg-black bg-opacity-10 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> is set</li>
-                <li>Restart the development server</li>
-              </ol>
-            </>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Firecrawl Status */}
-      <div className={`rounded-lg border p-4 ${firecrawlStatus === 'configured' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}>
-        <div className="flex items-center space-x-3">
-          {firecrawlStatus === 'configured' ? 
-            <CheckCircle className="h-5 w-5 text-green-500" /> : 
-            <AlertCircle className="h-5 w-5 text-yellow-500" />
-          }
-          <div>
-            <p className="font-medium">
-              {firecrawlStatus === 'configured' ? 'Firecrawl API configured' : 'Firecrawl API not configured'}
-            </p>
-            {firecrawlStatus === 'misconfigured' && (
-              <p className="text-sm mt-1 opacity-90">
-                Web scraping will not work without Firecrawl API key
+      {shouldShowFirecrawlStatus && (
+        <div className={`rounded-lg border p-4 ${firecrawlStatus === 'configured' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}>
+          <div className="flex items-center space-x-3">
+            {firecrawlStatus === 'configured' ? 
+              <CheckCircle className="h-5 w-5 text-green-500" /> : 
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+            }
+            <div>
+              <p className="font-medium">
+                {firecrawlStatus === 'configured' ? 'Firecrawl API configured' : 'Firecrawl API not configured'}
               </p>
-            )}
+              {firecrawlStatus === 'misconfigured' && (
+                <p className="text-sm mt-1 opacity-90">
+                  Web scraping will not work without Firecrawl API key
+                </p>
+              )}
+            </div>
           </div>
+          
+          {firecrawlStatus === 'misconfigured' && (
+            <div className="mt-3 text-sm">
+              <>
+                <p className="font-medium mb-2">To enable web scraping:</p>
+                <ol className="list-decimal list-inside space-y-1 opacity-90">
+                  <li>Get your API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">firecrawl.dev</a></li>
+                  <li>Add <code className="bg-black bg-opacity-10 px-1 rounded">VITE_FIRECRAWL_API_KEY</code> to your <code className="bg-black bg-opacity-10 px-1 rounded">.env</code> file</li>
+                  <li>Restart the development server</li>
+                </ol>
+              </>
+            </div>
+          )}
         </div>
-        
-        {firecrawlStatus === 'misconfigured' && (
-          <div className="mt-3 text-sm">
-            <>
-              <p className="font-medium mb-2">To enable web scraping:</p>
-              <ol className="list-decimal list-inside space-y-1 opacity-90">
-                <li>Get your API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">firecrawl.dev</a></li>
-                <li>Add <code className="bg-black bg-opacity-10 px-1 rounded">VITE_FIRECRAWL_API_KEY</code> to your <code className="bg-black bg-opacity-10 px-1 rounded">.env</code> file</li>
-                <li>Restart the development server</li>
-              </ol>
-            </>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
