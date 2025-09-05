@@ -1,5 +1,8 @@
 import React from 'react'
 import { Header } from './components/Header'
+import { FeaturesPage } from './components/FeaturesPage'
+import { PricingPage } from './components/PricingPage'
+import { ContactPage } from './components/ContactPage'
 import { ConnectionStatus } from './components/ConnectionStatus'
 import { UrlInput } from './components/UrlInput'
 import { ProjectStatus } from './components/ProjectStatus'
@@ -7,15 +10,49 @@ import { useProjects } from './hooks/useProjects'
 import { BarChart3, Shield, Zap, Users } from 'lucide-react'
 
 function App() {
+  const [currentPage, setCurrentPage] = React.useState('home')
   const { projects, loading, error, createProject, deleteProject } = useProjects()
 
   const handleUrlSubmit = async (url: string) => {
     await createProject(url)
   }
 
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page)
+  }
+
+  // Render different pages based on current page
+  if (currentPage === 'features') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header currentPage={currentPage} onNavigate={handleNavigate} />
+        <FeaturesPage />
+      </div>
+    )
+  }
+
+  if (currentPage === 'pricing') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header currentPage={currentPage} onNavigate={handleNavigate} />
+        <PricingPage />
+      </div>
+    )
+  }
+
+  if (currentPage === 'contact') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header currentPage={currentPage} onNavigate={handleNavigate} />
+        <ContactPage />
+      </div>
+    )
+  }
+
+  // Home page (default)
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header currentPage={currentPage} onNavigate={handleNavigate} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
