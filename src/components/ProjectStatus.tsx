@@ -105,13 +105,20 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Progress</span>
-              <span className="font-medium text-gray-900">Scraping...</span>
+              <span className="font-medium text-gray-900">
+                {project.progress_message || 'Processing...'}
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300 animate-pulse"
-                style={{ width: '60%' }}
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${project.progress || 0}%` }}
               />
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>0%</span>
+              <span className="font-medium">{project.progress || 0}%</span>
+              <span>100%</span>
             </div>
           </div>
         )}

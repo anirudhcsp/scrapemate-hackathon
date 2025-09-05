@@ -18,6 +18,8 @@ export type Project = {
   status: 'queued' | 'processing' | 'completed' | 'failed'
   created_at: string
   name?: string
+  progress?: number
+  progress_message?: string
 }
 
 export type Page = {
