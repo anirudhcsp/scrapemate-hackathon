@@ -19,11 +19,15 @@ export const useExecutiveBrief = (projectId: string) => {
         .eq('project_id', projectId)
         .single()
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+      if (error) {
+        if (error.code === 'PGRST116') { // PGRST116 is "not found"
+          setBrief(null)
+          return
+        }
         throw error
       }
       
-      setBrief(data || null)
+      setBrief(data)
     } catch (err) {
       console.error('Error fetching executive brief:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch executive brief')
