@@ -12,7 +12,7 @@ export const Header: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">ScrapeMate</h1>
-              <p className="text-xs text-gray-500">Website Analysis Platform</p>
+              <p className="text-xs text-gray-500">Data made easy</p>
             </div>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
