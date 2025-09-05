@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { scrapeWebsite, isFirecrawlConfigured } from '../lib/firecrawl'
+import { generateExecutiveBrief, isOpenAIConfigured } from '../lib/openai'
 
 export class ScrapeService {
   static async processProject(projectId: string, url: string): Promise<void> {
@@ -69,6 +70,40 @@ export class ScrapeService {
 
       // Update project status to completed
       await this.updateProjectStatus(projectId, 'completed', 100, 'Analysis completed successfully!')
+
+      // Generate executive brief if OpenAI is configured
+      if (isOpenAIConfigured() && scrapeResult.pages.length > 0) {
+        await this.updateProjectStatus(projectId, 'completed', 100, 'Generating executive brief...')
+        
+        // Combine all page content for analysis
+        const combinedContent = scrapeResult.pages
+          .map(page => `${page.title || ''}\n${page.content || ''}`)
+          .join('\n\n')
+        
+        const companyName = new URL(url).hostname
+        const brief = await generateExecutiveBrief(combinedContent, companyName)
+        
+        if (brief) {
+          const briefData = {
+            project_id: projectId,
+            company_overview: brief.companyOverview,
+            products_services: brief.productsServices,
+            business_model: brief.businessModel,
+            target_market: brief.targetMarket,
+            key_insights: brief.keyInsights,
+            competitive_positioning: brief.competitivePositioning,
+            generated_at: brief.generatedAt
+          }
+
+          const { error: briefError } = await supabase
+            .from('executive_briefs')
+            .insert([briefData])
+
+          if (briefError) {
+            console.error('Error storing executive brief:', briefError)
+          }
+        }
+      }
 
     } catch (error) {
       console.error('Error processing project:', error)

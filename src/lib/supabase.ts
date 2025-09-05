@@ -33,3 +33,18 @@ export type Page = {
 }
 
 export type PageInsert = Omit<Page, 'id' | 'created_at'>
+
+export type ExecutiveBrief = {
+  id: string
+  project_id: string
+  company_overview?: string
+  products_services?: string
+  business_model?: string
+  target_market?: string
+  key_insights?: string
+  competitive_positioning?: string
+  generated_at?: string
+  created_at: string
+}
+
+export type ExecutiveBriefInsert = Omit<ExecutiveBrief, 'id' | 'created_at'>

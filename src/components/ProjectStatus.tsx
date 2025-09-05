@@ -4,6 +4,8 @@ import { Project } from '../lib/supabase'
 import { useProjectPages } from '../hooks/useProjectPages'
 import { PagesModal } from './PagesModal'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
+import { ExecutiveBriefModal } from './ExecutiveBriefModal'
+import { useExecutiveBrief } from '../hooks/useExecutiveBrief'
 import { generateReport, downloadReportAsMarkdown, downloadReportAsJSON, downloadReportAsCSV } from '../utils/reportGenerator'
 
 interface ProjectStatusProps {
@@ -13,7 +15,9 @@ interface ProjectStatusProps {
 
 export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete }) => {
   const { pages, loading: pagesLoading } = useProjectPages(project.id)
+  const { brief, loading: briefLoading } = useExecutiveBrief(project.id)
   const [showPagesModal, setShowPagesModal] = React.useState(false)
+  const [showBriefModal, setShowBriefModal] = React.useState(false)
   const [showDeleteModal, setShowDeleteModal] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
   const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'json' | 'csv'>('markdown')
@@ -59,6 +63,10 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
 
   const handleViewPages = () => {
     setShowPagesModal(true)
+  }
+
+  const handleViewBrief = () => {
+    setShowBriefModal(true)
   }
 
   const handleDownloadReport = () => {
@@ -157,6 +165,14 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
               >
                 View Pages ({pages.length})
               </button>
+              {brief && (
+                <button 
+                  onClick={handleViewBrief}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                  Executive Brief
+                </button>
+              )}
               <button 
                 onClick={handleDownloadReport}
                 className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
@@ -192,6 +208,15 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
         pages={pages}
         projectName={project.name || new URL(project.seed_url).hostname}
       />
+
+      {brief && (
+        <ExecutiveBriefModal
+          isOpen={showBriefModal}
+          onClose={() => setShowBriefModal(false)}
+          brief={brief}
+          projectName={project.name || new URL(project.seed_url).hostname}
+        />
+      )}
 
       <DeleteConfirmModal
         isOpen={showDeleteModal}

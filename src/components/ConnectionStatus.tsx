@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { isFirecrawlConfigured } from '../lib/firecrawl'
+import { isOpenAIConfigured } from '../lib/openai'
 
 export const ConnectionStatus: React.FC = () => {
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'error' | 'misconfigured'>('checking')
   const [firecrawlStatus, setFirecrawlStatus] = useState<'configured' | 'misconfigured'>('misconfigured')
+  const [openaiStatus, setOpenaiStatus] = useState<'configured' | 'misconfigured'>('misconfigured')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -46,6 +48,13 @@ export const ConnectionStatus: React.FC = () => {
         setFirecrawlStatus('configured')
       } else {
         setFirecrawlStatus('misconfigured')
+      }
+
+      // Check OpenAI configuration
+      if (isOpenAIConfigured()) {
+        setOpenaiStatus('configured')
+      } else {
+        setOpenaiStatus('misconfigured')
       }
     }
 
@@ -98,9 +107,10 @@ export const ConnectionStatus: React.FC = () => {
   // Only show status messages if there are errors or misconfigurations
   const shouldShowSupabaseStatus = supabaseStatus === 'error' || supabaseStatus === 'misconfigured'
   const shouldShowFirecrawlStatus = firecrawlStatus === 'misconfigured'
+  const shouldShowOpenAIStatus = openaiStatus === 'misconfigured'
 
   // If everything is working fine, don't show any status messages
-  if (!shouldShowSupabaseStatus && !shouldShowFirecrawlStatus) {
+  if (!shouldShowSupabaseStatus && !shouldShowFirecrawlStatus && !shouldShowOpenAIStatus) {
     return null
   }
 
@@ -162,6 +172,41 @@ export const ConnectionStatus: React.FC = () => {
                 <ol className="list-decimal list-inside space-y-1 opacity-90">
                   <li>Get your API key from <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="underline">firecrawl.dev</a></li>
                   <li>Add <code className="bg-black bg-opacity-10 px-1 rounded">VITE_FIRECRAWL_API_KEY</code> to your <code className="bg-black bg-opacity-10 px-1 rounded">.env</code> file</li>
+                  <li>Restart the development server</li>
+                </ol>
+              </>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* OpenAI Status */}
+      {shouldShowOpenAIStatus && (
+        <div className={`rounded-lg border p-4 ${openaiStatus === 'configured' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}>
+          <div className="flex items-center space-x-3">
+            {openaiStatus === 'configured' ? 
+              <CheckCircle className="h-5 w-5 text-green-500" /> : 
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+            }
+            <div>
+              <p className="font-medium">
+                {openaiStatus === 'configured' ? 'OpenAI API configured' : 'OpenAI API not configured'}
+              </p>
+              {openaiStatus === 'misconfigured' && (
+                <p className="text-sm mt-1 opacity-90">
+                  Executive briefs will not be generated without OpenAI API key
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {openaiStatus === 'misconfigured' && (
+            <div className="mt-3 text-sm">
+              <>
+                <p className="font-medium mb-2">To enable AI-generated executive briefs:</p>
+                <ol className="list-decimal list-inside space-y-1 opacity-90">
+                  <li>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">OpenAI Platform</a></li>
+                  <li>Add <code className="bg-black bg-opacity-10 px-1 rounded">VITE_OPENAI_API_KEY</code> to your <code className="bg-black bg-opacity-10 px-1 rounded">.env</code> file</li>
                   <li>Restart the development server</li>
                 </ol>
               </>
