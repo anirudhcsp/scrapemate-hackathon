@@ -49,7 +49,9 @@ export const useProjects = () => {
       const projectData: ProjectInsert = {
         seed_url: url,
         status: 'queued',
-        name: new URL(url).hostname
+        name: new URL(url).hostname,
+        progress: 0,
+        progress_message: 'Queued for analysis...'
       }
 
       const { data, error } = await supabase
@@ -69,9 +71,11 @@ export const useProjects = () => {
       setProjects(prev => [newProject, ...prev])
 
       // Start scraping process in the background
-      ScrapeService.processProject(newProject.id, url).catch(error => {
-        console.error('Background scraping failed:', error)
-      })
+      setTimeout(() => {
+        ScrapeService.processProject(newProject.id, url).catch(error => {
+          console.error('Background scraping failed:', error)
+        })
+      }, 100) // Small delay to ensure UI updates
 
       return newProject
     } catch (err) {
@@ -90,15 +94,31 @@ export const useProjects = () => {
 
   // Poll for project status updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      const hasProcessingProjects = projects.some(p => p.status === 'processing')
-      if (hasProcessingProjects) {
-        fetchProjects()
+    const interval = setInterval(async () => {
+      const hasActiveProjects = projects.some(p => 
+        p.status === 'queued' || p.status === 'processing'
+      )
+      if (hasActiveProjects) {
+        await fetchProjects()
       }
-    }, 3000) // Poll every 3 seconds
+    }, 2000) // Poll every 2 seconds for faster updates
 
     return () => clearInterval(interval)
   }, [projects])
+
+  // Start polling immediately when a new project is created
+  useEffect(() => {
+    if (projects.length > 0) {
+      const latestProject = projects[0]
+      if (latestProject.status === 'queued' || latestProject.status === 'processing') {
+        // Force an immediate update after project creation
+        const timeoutId = setTimeout(() => {
+          fetchProjects()
+        }, 1000)
+        return () => clearTimeout(timeoutId)
+      }
+    }
+  }, [projects.length])
 
   useEffect(() => {
     fetchProjects()

@@ -12,6 +12,9 @@ export class ScrapeService {
 
       // Update project status to processing
       await this.updateProjectStatus(projectId, 'processing', 0, 'Starting website analysis...')
+      
+      // Small delay to ensure status update is committed
+      await new Promise(resolve => setTimeout(resolve, 500))
 
       // Start scraping with Firecrawl
       await this.updateProjectStatus(projectId, 'processing', 10, 'Connecting to website...')
@@ -59,6 +62,9 @@ export class ScrapeService {
           90, 
           `Finalizing analysis of ${totalPages} page${totalPages !== 1 ? 's' : ''}...`
         )
+        
+        // Small delay before completion
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
 
       // Update project status to completed
