@@ -2,6 +2,8 @@ import React from 'react'
 import { CheckCircle, Clock, AlertCircle, Loader, Globe } from 'lucide-react'
 import { Project } from '../lib/supabase'
 import { useProjectPages } from '../hooks/useProjectPages'
+import { PagesModal } from './PagesModal'
+import { generateReport, downloadReportAsMarkdown, downloadReportAsJSON, downloadReportAsCSV } from '../utils/reportGenerator'
 
 interface ProjectStatusProps {
   project: Project
@@ -9,6 +11,8 @@ interface ProjectStatusProps {
 
 export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
   const { pages, loading: pagesLoading } = useProjectPages(project.id)
+  const [showPagesModal, setShowPagesModal] = React.useState(false)
+  const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'json' | 'csv'>('markdown')
 
   const getStatusIcon = () => {
     switch (project.status) {
@@ -49,64 +53,113 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
     }
   }
 
+  const handleViewPages = () => {
+    setShowPagesModal(true)
+  }
+
+  const handleDownloadReport = () => {
+    const reportData = generateReport(project, pages)
+    
+    switch (downloadFormat) {
+      case 'json':
+        downloadReportAsJSON(reportData)
+        break
+      case 'csv':
+        downloadReportAsCSV(reportData)
+        break
+      default:
+        downloadReportAsMarkdown(reportData)
+    }
+  }
+
   return (
-    <div className={`rounded-xl border-2 p-6 transition-all duration-200 ${getStatusColor()}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          {getStatusIcon()}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {project.name || new URL(project.url).hostname}
-            </h3>
-            <p className="text-sm text-gray-600">{project.url}</p>
+    <>
+      <div className={`rounded-xl border-2 p-6 transition-all duration-200 ${getStatusColor()}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            {getStatusIcon()}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {project.name || new URL(project.seed_url).hostname}
+              </h3>
+              <p className="text-sm text-gray-600">{project.seed_url}</p>
+            </div>
           </div>
+          <span className="text-sm font-medium text-gray-500">
+            {getStatusText()}
+          </span>
         </div>
-        <span className="text-sm font-medium text-gray-500">
-          {getStatusText()}
-        </span>
+
+        {project.status === 'completed' && pages.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Globe className="h-4 w-4" />
+              <span>
+                Scraped {pages.length} page{pages.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {project.status === 'processing' && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Progress</span>
+              <span className="font-medium text-gray-900">Scraping...</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300 animate-pulse"
+                style={{ width: '60%' }}
+              />
+            </div>
+          </div>
+        )}
+
+        {project.status === 'completed' && (
+          <div className="mt-4 space-y-3">
+            <div className="flex space-x-3">
+              <button 
+                onClick={handleViewPages}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                View Pages ({pages.length})
+              </button>
+              <button 
+                onClick={handleDownloadReport}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              >
+                Download Report
+              </button>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-gray-500">Download format:</span>
+              <select
+                value={downloadFormat}
+                onChange={(e) => setDownloadFormat(e.target.value as 'markdown' | 'json' | 'csv')}
+                className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+              >
+                <option value="markdown">Markdown (.md)</option>
+                <option value="json">JSON (.json)</option>
+                <option value="csv">CSV (.csv)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 text-xs text-gray-500">
+          Created: {new Date(project.created_at).toLocaleDateString()} at{' '}
+          {new Date(project.created_at).toLocaleTimeString()}
+        </div>
       </div>
 
-      {project.status === 'completed' && pages.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Globe className="h-4 w-4" />
-            <span>
-              Scraped {pages.length} page{pages.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {project.status === 'processing' && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Progress</span>
-            <span className="font-medium text-gray-900">Scraping...</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300 animate-pulse"
-              style={{ width: '60%' }}
-            />
-          </div>
-        </div>
-      )}
-
-      {project.status === 'completed' && (
-        <div className="mt-4 flex space-x-3">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-            View Pages ({pages.length})
-          </button>
-          <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
-            Download Report
-          </button>
-        </div>
-      )}
-
-      <div className="mt-3 text-xs text-gray-500">
-        Created: {new Date(project.created_at).toLocaleDateString()} at{' '}
-        {new Date(project.created_at).toLocaleTimeString()}
-      </div>
-    </div>
+      <PagesModal
+        isOpen={showPagesModal}
+        onClose={() => setShowPagesModal(false)}
+        pages={pages}
+        projectName={project.name || new URL(project.seed_url).hostname}
+      />
+    </>
   )
 }
