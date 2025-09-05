@@ -1,7 +1,11 @@
 import React from 'react'
 import { Brain, Zap, FileText, BarChart3, Shield, Globe, Clock, Users } from 'lucide-react'
 
-export const FeaturesPage: React.FC = () => {
+interface FeaturesPageProps {
+  onNavigate?: (page: string) => void
+}
+
+export const FeaturesPage: React.FC<FeaturesPageProps> = ({ onNavigate }) => {
   const features = [
     {
       icon: <Brain className="h-8 w-8" />,
@@ -123,11 +127,25 @@ export const FeaturesPage: React.FC = () => {
             Join thousands of businesses using ScrapeMate to gain competitive 
             intelligence and make data-driven decisions.
           </p>
-          <button className="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-colors shadow-lg">
+          <button 
+            onClick={() => onNavigate?.('home')}
+            className="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-colors shadow-lg"
+          >
             Start Analyzing Today
           </button>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-gray-600">
+              © 2025 ScrapeMate. Built for modern businesses.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

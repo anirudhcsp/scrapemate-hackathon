@@ -1,7 +1,11 @@
 import React from 'react'
 import { Check, Star, Zap } from 'lucide-react'
 
-export const PricingPage: React.FC = () => {
+interface PricingPageProps {
+  onNavigate?: (page: string) => void
+}
+
+export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate }) => {
   const plans = [
     {
       name: 'Free',
@@ -224,15 +228,26 @@ export const PricingPage: React.FC = () => {
             competitive intelligence and make data-driven decisions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-colors shadow-lg">
-              Start Free Trial
-            </button>
-            <button className="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+            <button 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+            >
               Contact Sales
             </button>
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-gray-600">
+              © 2025 ScrapeMate. Built for modern businesses.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
