@@ -1,6 +1,8 @@
+// src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://urapmfycshihyojdteaj.supabase.co'
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL || 'https://urapmfycshihyojdteaj.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Create client even with missing key to prevent app crash
@@ -11,6 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export const isSupabaseConfigured = () => {
   return !!(supabaseUrl && supabaseAnonKey && supabaseAnonKey !== '')
 }
+
+/* ----------------------------- Types ------------------------------ */
 
 export type Project = {
   id: string
@@ -34,16 +38,32 @@ export type Page = {
 
 export type PageInsert = Omit<Page, 'id' | 'created_at'>
 
-// Add a debug function to test page queries
+export type ExecutiveBrief = {
+  id: string
+  project_id: string
+  company_overview: string
+  products_services: string
+  business_model: string
+  target_market: string
+  key_insights: string
+  competitive_positioning: string
+  generated_at: string
+  created_at: string
+}
+
+export type ExecutiveBriefInsert = Omit<ExecutiveBrief, 'id' | 'created_at'>
+
+/* -------------------------- Debug helper -------------------------- */
+
 export const debugPageQuery = async (projectId: string) => {
   console.log('Debug: Testing page query for project:', projectId)
-  
+
   try {
     const { data, error, count } = await supabase
       .from('pages')
       .select('*', { count: 'exact' })
       .eq('project_id', projectId)
-    
+
     console.log('Debug query result:', { data, error, count, projectId })
     return { data, error, count }
   } catch (err) {
@@ -52,17 +72,25 @@ export const debugPageQuery = async (projectId: string) => {
   }
 }
 
-export type ExecutiveBrief = {
-  id: string
-  project_id: string
-  company_overview?: string
-  products_services?: string
-  business_model?: string
-  target_market?: string
-  key_insights?: string
-  competitive_positioning?: string
-  generated_at?: string
-  created_at: string
-}
+/* ---------------------- Executive Brief helpers ------------------- */
 
-export type ExecutiveBriefInsert = Omit<ExecutiveBrief, 'id' | 'created_at'>
+/**
+ * Insert or update the executive brief for a project.
+ * Uses upsert on project_id so clicking "Generate" again will replace the brief.
+ */
+export async function saveExecutiveBrief(
+  projectId: string,
+  payload: Omit<ExecutiveBrief, 'id' | 'project_id' | 'created_at'>
+): Promise<ExecutiveBrief> {
+  const { data, error } = await supabase
+    .from('executive_briefs')
+    .upsert(
+      [{ project_id: projectId, ...payload }],
+      { onConflict: 'project_id' } // ensure 1 brief per project
+    )
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as ExecutiveBrief
+}
