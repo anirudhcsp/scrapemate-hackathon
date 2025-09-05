@@ -120,7 +120,7 @@ export const ExecutiveBriefModal: React.FC<ExecutiveBriefModalProps> = ({
                   </h3>
                 </div>
                 <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {section.content || 'No information available for this section.'}
+                  {section.content ? section.content.replace(/^["']|["']$/g, '').replace(/\\n/g, '\n').replace(/\\"/g, '"') : 'No information available for this section.'}
                 </div>
               </div>
             ))}

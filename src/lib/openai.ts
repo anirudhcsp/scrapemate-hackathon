@@ -31,24 +31,24 @@ export const generateExecutiveBrief = async (content: string, companyName: strin
 
     const prompt = `Analyze the following website content for ${companyName} and create a comprehensive executive brief. Write in a professional, business report style with clear paragraphs and proper formatting. Structure your response as a JSON object with the following sections:
 
-1. companyOverview: Write 2-3 well-structured paragraphs about what the company does, their mission, and core business. Use professional business language.
-2. productsServices: Write 2-3 detailed paragraphs describing their main products and services. Focus on clear explanations without technical jargon.
-3. businessModel: Write 2-3 paragraphs explaining how they make money, revenue streams, and business approach in accessible language.
-4. targetMarket: Write 2-3 paragraphs about who their customers are, market segments, and target audience using clear business terminology.
-5. keyInsights: Write 2-3 paragraphs highlighting important findings, unique value propositions, and notable business aspects.
-6. competitivePositioning: Write 2-3 paragraphs about how they position themselves in the market and their competitive advantages.
+1. companyOverview: Write 2-3 well-structured paragraphs about what the company does, their mission, and core business. Use professional business language. Do not include any JSON formatting, field names, or structural elements in your response.
+2. productsServices: Write 2-3 detailed paragraphs describing their main products and services. Focus on clear explanations without technical jargon. Write as flowing prose, not structured data.
+3. businessModel: Write 2-3 paragraphs explaining how they make money, revenue streams, and business approach in accessible language. Present as narrative text only.
+4. targetMarket: Write 2-3 paragraphs about who their customers are, market segments, and target audience using clear business terminology. Write in paragraph form only.
+5. keyInsights: Write 2-3 paragraphs highlighting important findings, unique value propositions, and notable business aspects. Present as readable business prose.
+6. competitivePositioning: Write 2-3 paragraphs about how they position themselves in the market and their competitive advantages. Write as professional narrative text.
 
 Website content to analyze:
 ${content.substring(0, 8000)} // Limit content to avoid token limits
 
-Write each section as clean, readable paragraphs without any JSON formatting, curly braces, quotation marks, or technical field names in the content itself. The content should read like a professional business report. Return the response as valid JSON with the six sections above.`
+CRITICAL: Write each section as clean, readable paragraphs without any JSON formatting, curly braces, quotation marks, or technical field names in the content itself. The content should read like a professional business report that flows naturally when read aloud. Do not include any structural markup or formatting indicators in the actual content. Return the response as valid JSON with the six sections above, but ensure the content within each section is pure prose.`
 
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
-          content: 'You are a business analyst creating executive briefs. Write in a professional, clear business style. Respond only with valid JSON containing the requested analysis sections. Each section should contain clean, readable paragraphs without any JSON formatting, technical field names, or structural elements visible in the content.'
+          content: 'You are a business analyst creating executive briefs. Write in a professional, clear business style. Respond only with valid JSON containing the requested analysis sections. Each section should contain clean, readable paragraphs that flow naturally as prose - no JSON formatting, technical field names, quotation marks, or structural elements should appear in the actual content. Write as if you are writing a traditional business report that will be read by executives.'
         },
         {
           role: 'user',
