@@ -1,24 +1,28 @@
+// src/openai.ts
 import OpenAI from 'openai'
 
-// ❗️[RECOMMENDED] Move this call to your backend ASAP. Browser calls expose keys.
-// For now we'll keep it to unblock you.
+/**
+ * NOTE: For hackathon speed this still runs in the browser.
+ * After the demo, move this call server-side to avoid exposing your API key.
+ */
 const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
 
 export const openai = new OpenAI({
   apiKey: openaiApiKey,
-  dangerouslyAllowBrowser: true,
+  dangerouslyAllowBrowser: true, // front-end usage (temporary)
 })
 
 export const isOpenAIConfigured = () => !!openaiApiKey
 
-export interface ExecutiveBrief {
+// Shape we return to the app (snake_case so it matches your DB + UI)
+export interface LlmExecutiveBrief {
   company_overview: string
   products_services: string
   business_model: string
   target_market: string
   key_insights: string
   competitive_positioning: string
-  generatedAt: string
+  generated_at: string
 }
 
 const SYSTEM_PROMPT = `
@@ -34,34 +38,42 @@ You are a precise business analyst. Return ONLY valid JSON that matches this sch
 }
 
 Rules:
-- Do not include markdown, code fences, explanations, or extra keys.
-- Each field must be 2–3 concise paragraphs of professional prose.
+- No markdown, no code fences, no explanations.
+- No extra keys.
+- Each field must contain 2–3 concise paragraphs of professional prose.
 `
 
+/**
+ * Generate an executive brief from scraped website content.
+ * Returns null if generation fails.
+ */
 export const generateExecutiveBrief = async (
   content: string,
   companyName: string
-): Promise<ExecutiveBrief | null> => {
+): Promise<LlmExecutiveBrief | null> => {
   try {
-    if (!isOpenAIConfigured()) throw new Error('OpenAI API key is not configured')
+    if (!isOpenAIConfigured()) {
+      throw new Error('OpenAI API key is not configured')
+    }
 
-    // Keep payload reasonable (~6–8k chars ≈ ~1500–2000 tokens incl. prompts)
-    const trimmed = content.slice(0, 8000)
+    // Keep payload reasonable (~8k chars). The model sees the trimmed content.
+    const trimmed = (content || '').slice(0, 8000)
 
     const userPrompt = `
-Analyze website content for "${companyName}" and produce the JSON object.
+Analyze the following website content for "${companyName}" and produce the JSON object defined by the system prompt.
 
 Website content:
 ${trimmed}
-`
+`.trim()
 
     const resp = await openai.chat.completions.create({
+      // Modern, inexpensive model. (gpt-3.5-turbo is retired)
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ],
-      // Force strict JSON
+      // Force strictly valid JSON
       response_format: { type: 'json_object' },
       temperature: 0.3,
       max_tokens: 1800,
@@ -70,25 +82,19 @@ ${trimmed}
     let raw = resp.choices?.[0]?.message?.content?.trim()
     if (!raw) throw new Error('No response from OpenAI')
 
-    // Defensive: strip code fences if present
+    // Defensive: some SDKs/models may still wrap in code fences
     if (raw.startsWith('```')) {
       raw = raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
     }
 
     const data = JSON.parse(raw)
 
-    return {
+    // Map model keys (camelCase) -> app keys (snake_case)
+    const result: LlmExecutiveBrief = {
       company_overview: data.companyOverview ?? 'No overview available',
       products_services: data.productsServices ?? 'No products/services information available',
       business_model: data.businessModel ?? 'No business model information available',
       target_market: data.targetMarket ?? 'No target market information available',
-      key_insights: data.keyInsights ?? 'No key insights available',
-      competitive_positioning: data.competitivePositioning ?? 'No competitive positioning information available',
-      generatedAt: new Date().toISOString(),
-    }
-  } catch (err) {
-    console.error('OpenAI brief generation error:', err)
-    return null
-  }
-}
+      key_in_
+
 
