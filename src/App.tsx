@@ -7,7 +7,7 @@ import { useProjects } from './hooks/useProjects'
 import { BarChart3, Shield, Zap, Users } from 'lucide-react'
 
 function App() {
-  const { projects, loading, error, createProject } = useProjects()
+  const { projects, loading, error, createProject, deleteProject } = useProjects()
 
   const handleUrlSubmit = async (url: string) => {
     await createProject(url)
@@ -98,7 +98,7 @@ function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {projects.map((project) => (
-                <ProjectStatus key={project.id} project={project} />
+                <ProjectStatus key={project.id} project={project} onDelete={deleteProject} />
               ))}
             </div>
           </div>

@@ -92,6 +92,31 @@ export const useProjects = () => {
     }
   }
 
+  const deleteProject = async (projectId: string): Promise<boolean> => {
+    try {
+      if (!isSupabaseConfigured()) {
+        throw new Error('Supabase is not properly configured.')
+      }
+
+      // Delete the project (cascade will handle related records)
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId)
+
+      if (error) {
+        throw new Error(`Failed to delete project: ${error.message}`)
+      }
+
+      // Remove from local state
+      setProjects(prev => prev.filter(project => project.id !== projectId))
+      return true
+    } catch (err) {
+      console.error('Error deleting project:', err)
+      setError(err instanceof Error ? err.message : 'Failed to delete project')
+      return false
+    }
+  }
   // Poll for project status updates
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -129,6 +154,7 @@ export const useProjects = () => {
     loading,
     error,
     createProject,
+    deleteProject,
     fetchProjects
   }
 }

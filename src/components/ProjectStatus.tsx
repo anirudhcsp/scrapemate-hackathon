@@ -1,17 +1,21 @@
 import React from 'react'
-import { CheckCircle, Clock, AlertCircle, Loader, Globe } from 'lucide-react'
+import { CheckCircle, Clock, AlertCircle, Loader, Globe, Trash2 } from 'lucide-react'
 import { Project } from '../lib/supabase'
 import { useProjectPages } from '../hooks/useProjectPages'
 import { PagesModal } from './PagesModal'
+import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { generateReport, downloadReportAsMarkdown, downloadReportAsJSON, downloadReportAsCSV } from '../utils/reportGenerator'
 
 interface ProjectStatusProps {
   project: Project
+  onDelete: (projectId: string) => Promise<boolean>
 }
 
-export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
+export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete }) => {
   const { pages, loading: pagesLoading } = useProjectPages(project.id)
   const [showPagesModal, setShowPagesModal] = React.useState(false)
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false)
+  const [isDeleting, setIsDeleting] = React.useState(false)
   const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'json' | 'csv'>('markdown')
 
   const getStatusIcon = () => {
@@ -72,9 +76,21 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
     }
   }
 
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true)
+    const success = await onDelete(project.id)
+    if (success) {
+      setShowDeleteModal(false)
+    }
+    setIsDeleting(false)
+  }
   return (
     <>
-      <div className={`rounded-xl border-2 p-6 transition-all duration-200 ${getStatusColor()}`}>
+      <div className={`rounded-xl border-2 p-6 transition-all duration-200 group hover:shadow-md ${getStatusColor()}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             {getStatusIcon()}
@@ -85,9 +101,18 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
               <p className="text-sm text-gray-600">{project.seed_url}</p>
             </div>
           </div>
-          <span className="text-sm font-medium text-gray-500">
-            {getStatusText()}
-          </span>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm font-medium text-gray-500">
+              {getStatusText()}
+            </span>
+            <button
+              onClick={handleDeleteClick}
+              className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+              title="Delete project"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {project.status === 'completed' && pages.length > 0 && (
@@ -168,5 +193,12 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project }) => {
         projectName={project.name || new URL(project.seed_url).hostname}
       />
     </>
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        projectName={project.name || new URL(project.seed_url).hostname}
+        isDeleting={isDeleting}
+      />
   )
 }
