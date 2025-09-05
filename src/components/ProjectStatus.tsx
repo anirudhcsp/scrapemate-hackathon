@@ -6,7 +6,7 @@ import { PagesModal } from './PagesModal'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { ExecutiveBriefModal } from './ExecutiveBriefModal'
 import { useExecutiveBrief } from '../hooks/useExecutiveBrief'
-import { generateReport, downloadReportAsMarkdown, downloadReportAsJSON, downloadReportAsCSV } from '../utils/reportGenerator'
+import { generateReport, downloadReportAsMarkdown, downloadReportAsPDF } from '../utils/reportGenerator'
 
 interface ProjectStatusProps {
   project: Project
@@ -20,7 +20,7 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
   const [showBriefModal, setShowBriefModal] = React.useState(false)
   const [showDeleteModal, setShowDeleteModal] = React.useState(false)
   const [isDeleting, setIsDeleting] = React.useState(false)
-  const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'json' | 'csv'>('markdown')
+  const [downloadFormat, setDownloadFormat] = React.useState<'markdown' | 'pdf'>('pdf')
   const [displayPageCount, setDisplayPageCount] = React.useState(0)
 
   // Debug logging
@@ -100,14 +100,11 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
   }
 
   const handleDownloadReport = () => {
-    const reportData = generateReport(project, pages)
+    const reportData = generateReport(project, pages, brief)
     
     switch (downloadFormat) {
-      case 'json':
-        downloadReportAsJSON(reportData)
-        break
-      case 'csv':
-        downloadReportAsCSV(reportData)
+      case 'pdf':
+        downloadReportAsPDF(reportData)
         break
       default:
         downloadReportAsMarkdown(reportData)
@@ -215,12 +212,11 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
               <span className="text-xs text-gray-500">Download format:</span>
               <select
                 value={downloadFormat}
-                onChange={(e) => setDownloadFormat(e.target.value as 'markdown' | 'json' | 'csv')}
+                onChange={(e) => setDownloadFormat(e.target.value as 'markdown' | 'pdf')}
                 className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
               >
+                <option value="pdf">PDF (.pdf)</option>
                 <option value="markdown">Markdown (.md)</option>
-                <option value="json">JSON (.json)</option>
-                <option value="csv">CSV (.csv)</option>
               </select>
             </div>
           </div>
