@@ -17,13 +17,9 @@ export const useExecutiveBrief = (projectId: string) => {
         .from('executive_briefs')
         .select('*')
         .eq('project_id', projectId)
-        .single()
+        .maybeSingle()
 
       if (error) {
-        if (error.code === 'PGRST116') { // PGRST116 is "not found"
-          setBrief(null)
-          return
-        }
         throw error
       }
       
