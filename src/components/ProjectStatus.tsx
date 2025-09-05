@@ -33,28 +33,33 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
 
   const projectName = project.name || new URL(project.seed_url).hostname
 
-  // Debug logging (optional)
+  // Debug logging
   React.useEffect(() => {
-    console.log(`ProjectStatus - ${projectName}`, {
-      projectId: project.id,
-      status: project.status,
-      pagesCount: pages.length,
-      pagesLoading,
-    })
-  }, [pages.length, pagesLoading, project.id, projectName, project.status])
+    console.log(`ProjectStatus Debug - Project: ${projectName}`)
+    console.log(`  - Project ID: ${project.id}`)
+    console.log(`  - Project Status: ${project.status}`)
+    console.log(`  - Pages Count: ${pages.length}`)
+    console.log(`  - Pages Loading: ${pagesLoading}`)
+    console.log(`  - Pages Data:`, pages)
+  }, [pages.length, pagesLoading, project.id])
 
   // Update display page count when pages change
   React.useEffect(() => {
+    console.log(`Updating display page count for ${projectName}: ${pages.length}`)
     setDisplayPageCount(pages.length)
-  }, [pages.length])
+  }, [pages.length, projectName])
 
-  // If completed but count not set, retry once
+  // Force re-render when project status changes to completed
   React.useEffect(() => {
     if (project.status === 'completed' && displayPageCount === 0 && !pagesLoading) {
-      const t = setTimeout(() => setDisplayPageCount(pages.length), 800)
-      return () => clearTimeout(t)
+      console.log(`Project completed but no pages shown, forcing refresh for ${projectName}`)
+      const timeoutId = setTimeout(() => {
+        console.log('Triggering page count update after completion')
+        setDisplayPageCount(pages.length)
+      }, 1000)
+      return () => clearTimeout(timeoutId)
     }
-  }, [project.status, displayPageCount, pagesLoading, pages.length])
+  }, [project.status, displayPageCount, pagesLoading, pages.length, projectName])
 
   const getStatusIcon = () => {
     switch (project.status) {
@@ -295,4 +300,5 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
     </>
   )
 }
+
 
