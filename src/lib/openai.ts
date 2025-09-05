@@ -67,13 +67,11 @@ ${trimmed}
 `.trim()
 
     const resp = await openai.chat.completions.create({
-      // Modern, inexpensive model. (gpt-3.5-turbo is retired)
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ],
-      // Force strictly valid JSON
       response_format: { type: 'json_object' },
       temperature: 0.3,
       max_tokens: 1800,
@@ -87,14 +85,34 @@ ${trimmed}
       raw = raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
     }
 
+    // 🔎 DEBUG LOGS (keep these for now)
+    console.log('LLM raw output:', raw)
+
     const data = JSON.parse(raw)
+
+    // 🔎 DEBUG LOGS
+    console.log('LLM parsed JSON:', data)
 
     // Map model keys (camelCase) -> app keys (snake_case)
     const result: LlmExecutiveBrief = {
-      company_overview: data.companyOverview ?? 'No overview available',
-      products_services: data.productsServices ?? 'No products/services information available',
-      business_model: data.businessModel ?? 'No business model information available',
-      target_market: data.targetMarket ?? 'No target market information available',
-      key_in_
+      company_overview: data.companyOverview ?? '',
+      products_services: data.productsServices ?? '',
+      business_model: data.businessModel ?? '',
+      target_market: data.targetMarket ?? '',
+      key_insights: data.keyInsights ?? '',
+      competitive_positioning: data.competitivePositioning ?? '',
+      generated_at: new Date().toISOString(),
+    }
+
+    // 🔎 DEBUG LOGS
+    console.log('Mapped result (snake_case):', result)
+
+    return result
+  } catch (err) {
+    console.error('OpenAI brief generation error:', err)
+    return null
+  }
+}
+
 
 
