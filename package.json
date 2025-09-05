@@ -10,9 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.2",
     "@mendable/firecrawl-js": "^1.0.0",
+    "@supabase/supabase-js": "^2.57.2",
     "lucide-react": "^0.344.0",
+    "openai": "^5.19.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
