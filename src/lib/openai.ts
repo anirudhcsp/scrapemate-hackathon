@@ -1,17 +1,15 @@
 import OpenAI from 'openai'
 
+// ❗️[RECOMMENDED] Move this call to your backend ASAP. Browser calls expose keys.
+// For now we'll keep it to unblock you.
 const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
 
-// Create OpenAI client
 export const openai = new OpenAI({
   apiKey: openaiApiKey,
-  dangerouslyAllowBrowser: true // Required for client-side usage
+  dangerouslyAllowBrowser: true,
 })
 
-// Helper function to check if OpenAI is properly configured
-export const isOpenAIConfigured = () => {
-  return !!(openaiApiKey && openaiApiKey !== '')
-}
+export const isOpenAIConfigured = () => !!openaiApiKey
 
 export interface ExecutiveBrief {
   company_overview: string
@@ -23,61 +21,74 @@ export interface ExecutiveBrief {
   generatedAt: string
 }
 
-export const generateExecutiveBrief = async (content: string, companyName: string): Promise<ExecutiveBrief | null> => {
+const SYSTEM_PROMPT = `
+You are a precise business analyst. Return ONLY valid JSON that matches this schema:
+
+{
+  "companyOverview": "string",
+  "productsServices": "string",
+  "businessModel": "string",
+  "targetMarket": "string",
+  "keyInsights": "string",
+  "competitivePositioning": "string"
+}
+
+Rules:
+- Do not include markdown, code fences, explanations, or extra keys.
+- Each field must be 2–3 concise paragraphs of professional prose.
+`
+
+export const generateExecutiveBrief = async (
+  content: string,
+  companyName: string
+): Promise<ExecutiveBrief | null> => {
   try {
-    if (!isOpenAIConfigured()) {
-      throw new Error('OpenAI API key is not configured')
-    }
+    if (!isOpenAIConfigured()) throw new Error('OpenAI API key is not configured')
 
-    const prompt = `Analyze the following website content for ${companyName} and create a comprehensive executive brief. Write in a professional, business report style with clear paragraphs and proper formatting. Structure your response as a JSON object with the following sections:
+    // Keep payload reasonable (~6–8k chars ≈ ~1500–2000 tokens incl. prompts)
+    const trimmed = content.slice(0, 8000)
 
-1. companyOverview: Write 2-3 well-structured paragraphs about what the company does, their mission, and core business. Write ONLY the paragraph content - no labels, no field names, no JSON formatting.
-2. productsServices: Write 2-3 detailed paragraphs describing their main products and services. Write ONLY the paragraph content - no labels, no field names, no JSON formatting.
-3. businessModel: Write 2-3 paragraphs explaining how they make money, revenue streams, and business approach. Write ONLY the paragraph content - no labels, no field names, no JSON formatting.
-4. targetMarket: Write 2-3 paragraphs about who their customers are, market segments, and target audience. Write ONLY the paragraph content - no labels, no field names, no JSON formatting.
-5. keyInsights: Write 2-3 paragraphs highlighting important findings, unique value propositions, and notable business aspects. Write ONLY the paragraph content - no labels, no field names, no JSON formatting.
-6. competitivePositioning: Write 2-3 paragraphs about how they position themselves in the market and their competitive advantages. Write ONLY the paragraph content - no labels, no field names, no JSON formatting.
+    const userPrompt = `
+Analyze website content for "${companyName}" and produce the JSON object.
 
-Website content to analyze:
-${content.substring(0, 8000)} // Limit content to avoid token limits
+Website content:
+${trimmed}
+`
 
-CRITICAL: Each section should contain ONLY paragraph text - no field names, no colons, no labels, no JSON formatting. Write as if you are writing paragraphs for a printed business report. The JSON structure is only for organizing the response, but the content itself must be pure prose paragraphs.`
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+    const resp = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       messages: [
-        {
-          role: 'system',
-          content: 'You are a business analyst creating executive briefs. Write in a professional, clear business style. Respond with valid JSON, but each section content should be pure paragraph text with no field names, labels, or formatting. Write the content as if it will be printed in a business report - just clean, professional paragraphs.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
       ],
-      max_tokens: 2000,
-      temperature: 0.7
+      // Force strict JSON
+      response_format: { type: 'json_object' },
+      temperature: 0.3,
+      max_tokens: 1800,
     })
 
-    const briefContent = response.choices[0]?.message?.content
-    if (!briefContent) {
-      throw new Error('No response from OpenAI')
+    let raw = resp.choices?.[0]?.message?.content?.trim()
+    if (!raw) throw new Error('No response from OpenAI')
+
+    // Defensive: strip code fences if present
+    if (raw.startsWith('```')) {
+      raw = raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
     }
 
-    // Parse the JSON response
-    const briefData = JSON.parse(briefContent)
-    
+    const data = JSON.parse(raw)
+
     return {
-      company_overview: briefData.companyOverview || 'No overview available',
-      products_services: briefData.productsServices || 'No products/services information available',
-      business_model: briefData.businessModel || 'No business model information available',
-      target_market: briefData.targetMarket || 'No target market information available',
-      key_insights: briefData.keyInsights || 'No key insights available',
-      competitive_positioning: briefData.competitivePositioning || 'No competitive positioning information available',
-      generatedAt: new Date().toISOString()
+      company_overview: data.companyOverview ?? 'No overview available',
+      products_services: data.productsServices ?? 'No products/services information available',
+      business_model: data.businessModel ?? 'No business model information available',
+      target_market: data.targetMarket ?? 'No target market information available',
+      key_insights: data.keyInsights ?? 'No key insights available',
+      competitive_positioning: data.competitivePositioning ?? 'No competitive positioning information available',
+      generatedAt: new Date().toISOString(),
     }
-  } catch (error) {
-    console.error('OpenAI brief generation error:', error)
+  } catch (err) {
+    console.error('OpenAI brief generation error:', err)
     return null
   }
 }
+
