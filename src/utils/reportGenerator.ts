@@ -21,22 +21,18 @@ export const downloadReportAsPDF = (reportData: ReportData) => {
   // Create HTML content for PDF generation
   const htmlContent = generateHTMLReport(reportData)
   
-  // Create a new window for printing/PDF generation
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) {
-    alert('Please allow popups to generate PDF reports')
-    return
-  }
+  // Create a blob with the HTML content
+  const blob = new Blob([htmlContent], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
   
-  printWindow.document.write(htmlContent)
-  printWindow.document.close()
-  
-  // Wait for content to load then trigger print dialog
-  printWindow.onload = () => {
-    setTimeout(() => {
-      printWindow.print()
-    }, 500)
-  }
+  // Create download link and trigger download
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `scrapemate-report-${reportData.project.name || 'project'}-${new Date().toISOString().split('T')[0]}.html`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 const generateHTMLReport = (reportData: ReportData): string => {
