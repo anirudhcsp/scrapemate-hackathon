@@ -24,7 +24,12 @@ export const ProjectStatus: React.FC<ProjectStatusProps> = ({ project, onDelete 
 
   // Debug logging
   React.useEffect(() => {
-    console.log(`Project ${project.id} has ${pages.length} pages, loading: ${pagesLoading}`)
+    console.log(`ProjectStatus Debug - Project: ${project.name || project.seed_url}`)
+    console.log(`  - Project ID: ${project.id}`)
+    console.log(`  - Project Status: ${project.status}`)
+    console.log(`  - Pages Count: ${pages.length}`)
+    console.log(`  - Pages Loading: ${pagesLoading}`)
+    console.log(`  - Pages Data:`, pages)
   }, [pages.length, pagesLoading, project.id])
 
   const getStatusIcon = () => {

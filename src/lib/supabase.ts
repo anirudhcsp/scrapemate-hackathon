@@ -34,6 +34,24 @@ export type Page = {
 
 export type PageInsert = Omit<Page, 'id' | 'created_at'>
 
+// Add a debug function to test page queries
+export const debugPageQuery = async (projectId: string) => {
+  console.log('Debug: Testing page query for project:', projectId)
+  
+  try {
+    const { data, error, count } = await supabase
+      .from('pages')
+      .select('*', { count: 'exact' })
+      .eq('project_id', projectId)
+    
+    console.log('Debug query result:', { data, error, count, projectId })
+    return { data, error, count }
+  } catch (err) {
+    console.error('Debug query failed:', err)
+    return { data: null, error: err, count: 0 }
+  }
+}
+
 export type ExecutiveBrief = {
   id: string
   project_id: string
