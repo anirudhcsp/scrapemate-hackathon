@@ -29,15 +29,12 @@ export const scrapeWebsite = async (url: string): Promise<ScrapeResult> => {
       throw new Error('Firecrawl API key is not configured')
     }
 
-    // Use Firecrawl's crawl endpoint to scrape the entire website
+    // Use Firecrawl v1 API with correct parameters
     const crawlResponse = await firecrawl.crawlUrl(url, {
-      includes: [], // Include all pages by default
-      excludes: [], // No exclusions by default
-      generateImgAltText: true,
-      limit: 50, // Limit to 50 pages to avoid excessive usage
-      onlyMainContent: true,
-      includeHtml: false,
-      includeRawHtml: false
+      limit: 10,
+      scrapeOptions: {
+        formats: ['markdown', 'html']
+      }
     })
 
     if (!crawlResponse.success) {
