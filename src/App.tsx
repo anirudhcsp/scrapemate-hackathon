@@ -8,7 +8,9 @@ import { UrlInput } from './components/UrlInput'
 import { ProjectStatus } from './components/ProjectStatus'
 import { useProjects } from './hooks/useProjects'
 import { BarChart3, Shield, Zap, Users } from 'lucide-react'
-import RealModePanel from "./components/RealModePanel";
+
+// NOTE: Intentionally NO import of RealModePanel here.
+// import RealModePanel from "./components/RealModePanel";
 
 function App() {
   const [currentPage, setCurrentPage] = React.useState('home')
@@ -22,7 +24,7 @@ function App() {
     setCurrentPage(page)
   }
 
-  // Secondary pages
+  // Render different pages based on current page
   if (currentPage === 'features') {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -50,7 +52,7 @@ function App() {
     )
   }
 
-  // Home (default)
+  // Home page (default)
   return (
     <div className="min-h-screen bg-gray-50">
       <Header currentPage={currentPage} onNavigate={handleNavigate} />
@@ -121,7 +123,7 @@ function App() {
         </div>
       </section>
 
-      {/* Projects Section (legacy flow) */}
+      {/* Projects Section */}
       {projects.length > 0 && (
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -142,17 +144,6 @@ function App() {
           </div>
         </section>
       )}
-
-      {/* Real Mode Section (live end-to-end flow) */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-900">Run Real Mode</h3>
-            <p className="text-gray-600">Create → Crawl → Generate brief on a live website</p>
-          </div>
-          <RealModePanel />
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-8">
