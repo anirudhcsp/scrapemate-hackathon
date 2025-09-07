@@ -5,13 +5,7 @@ function normalizeUrl(input: string): string {
   let s = (input || "").trim();
   if (!s) return s;
   if (!/^https?:\/\//i.test(s)) s = "https://" + s;
-  try {
-    // Will throw if invalid
-    const u = new URL(s);
-    return u.toString();
-  } catch {
-    return "";
-  }
+  try { return new URL(s).toString(); } catch { return ""; }
 }
 
 async function safeCall<T>(label: string, fn: () => Promise<T>, log: (m: string) => void): Promise<T> {
@@ -50,7 +44,6 @@ export default function RealModePanel() {
       setBrief(null);
       setLogs([]);
 
-      // derive a friendly company name from host
       const host = new URL(url).hostname.replace(/^www\./, "");
       const company = host.split(".")[0].replace(/[-_]/g, " ");
 
@@ -85,7 +78,7 @@ export default function RealModePanel() {
       setBrief(b);
       log("Done ✅");
     } catch {
-      // error already logged & surfaced
+      // already logged
     } finally {
       setBusy(false);
     }
