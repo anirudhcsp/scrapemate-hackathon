@@ -4,7 +4,6 @@ import { FeaturesPage } from './components/FeaturesPage'
 import { PricingPage } from './components/PricingPage'
 import { ContactPage } from './components/ContactPage'
 import { ConnectionStatus } from './components/ConnectionStatus'
-import { DatabaseTest } from './components/DatabaseTest'
 import { UrlInput } from './components/UrlInput'
 import { ProjectStatus } from './components/ProjectStatus'
 import { useProjects } from './hooks/useProjects'
@@ -64,11 +63,6 @@ function App() {
           {/* Connection Status */}
           <div className="mb-8">
             <ConnectionStatus />
-          </div>
-
-          {/* Database Test - Only show if there are connection issues */}
-          <div className="mb-8">
-            <DatabaseTest />
           </div>
 
           <div className="text-center mb-12">
