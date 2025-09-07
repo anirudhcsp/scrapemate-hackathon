@@ -3,11 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl =
   import.meta.env.VITE_SUPABASE_URL || 'https://urapmfycshihyojdteaj.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Create client even with missing key to prevent app crash
-// The actual API calls will handle the authentication error gracefully
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Only create client if we have a valid key
+export const supabase = supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
