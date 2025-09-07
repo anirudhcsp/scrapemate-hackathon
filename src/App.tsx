@@ -22,7 +22,7 @@ function App() {
     setCurrentPage(page)
   }
 
-  // Render different pages based on current page
+  // Secondary pages
   if (currentPage === 'features') {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -50,7 +50,7 @@ function App() {
     )
   }
 
-  // Home page (default)
+  // Home (default)
   return (
     <div className="min-h-screen bg-gray-50">
       <Header currentPage={currentPage} onNavigate={handleNavigate} />
@@ -121,7 +121,7 @@ function App() {
         </div>
       </section>
 
-      {/* Projects Section */}
+      {/* Projects Section (legacy flow) */}
       {projects.length > 0 && (
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
