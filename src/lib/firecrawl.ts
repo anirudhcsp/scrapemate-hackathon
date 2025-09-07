@@ -1,5 +1,7 @@
 import FirecrawlApp from '@mendable/firecrawl-js'
+
 console.log('Firecrawl API Key (runtime):', import.meta.env.VITE_FIRECRAWL_API_KEY);
+
 const firecrawlApiKey = import.meta.env.VITE_FIRECRAWL_API_KEY || ''
 
 // Create Firecrawl client
