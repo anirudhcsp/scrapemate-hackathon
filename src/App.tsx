@@ -8,6 +8,8 @@ import { UrlInput } from './components/UrlInput'
 import { ProjectStatus } from './components/ProjectStatus'
 import { useProjects } from './hooks/useProjects'
 import { BarChart3, Shield, Zap, Users } from 'lucide-react'
+import RealModePanel from "./components/RealModePanel";
+
 
 function App() {
   const [currentPage, setCurrentPage] = React.useState('home')
