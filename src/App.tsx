@@ -10,7 +10,6 @@ import { useProjects } from './hooks/useProjects'
 import { BarChart3, Shield, Zap, Users } from 'lucide-react'
 import RealModePanel from "./components/RealModePanel";
 
-
 function App() {
   const [currentPage, setCurrentPage] = React.useState('home')
   const { projects, loading, error, createProject, deleteProject } = useProjects()
@@ -143,6 +142,17 @@ function App() {
           </div>
         </section>
       )}
+
+      {/* Real Mode Section (live end-to-end flow) */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900">Run Real Mode</h3>
+            <p className="text-gray-600">Create → Crawl → Generate brief on a live website</p>
+          </div>
+          <RealModePanel />
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-8">
